@@ -33,7 +33,7 @@ def load_to_snowflake(stage_path: str):
         warehouse=credentials["warehouse"],
         database=credentials["database"],
         schema=credentials["schema"]
-    )
+    ) 
 
     # Fully qualify the table name
     table_name = f"{credentials['database']}.{credentials['schema']}.e_commerce"
