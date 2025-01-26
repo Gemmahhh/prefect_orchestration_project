@@ -1,0 +1,5 @@
+# Ignore the file.csv in the root folder
+/e_commerce_dataset.csv
+
+# Ignore the another_file.csv in the subfolder
+/individual_tasks/e_commerce_dataset.csv
