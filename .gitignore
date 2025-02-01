@@ -3,3 +3,5 @@ e_commerce_dataset.csv
 prefect-env
 /individual_tasks/e_commerce_dataset.csv
 .gitignore
+dbt_job.py
+dbt_test.py
