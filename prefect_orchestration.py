@@ -3,6 +3,7 @@ from prefect_aws.s3 import S3Bucket
 from prefect_dbt.cloud import DbtCloudCredentials, DbtCloudJob
 from prefect_snowflake.database import SnowflakeConnector
 import boto3
+from httpx import Timeout
 
 # Task 1: Upload data to S3
 @task
@@ -46,7 +47,7 @@ def load_to_snowflake(stage_path: str, snowflake_block_name: str, table_name: st
 #     print(f"Triggered dbt Cloud job with Job ID: {job_id}")
 
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def trigger_dbt_cloud_job(dbt_block_name: str, job_id: int):
     """
     Triggers a dbt Cloud job using a Prefect DbtCloudCredentials block.
@@ -55,7 +56,7 @@ def trigger_dbt_cloud_job(dbt_block_name: str, job_id: int):
     print(f"Loaded dbt credentials: {dbt_credentials}")
     #dbt_job = DbtCloudJob(credentials=dbt_credentials, job_id=job_id)
     dbt_job = DbtCloudJob(dbt_cloud_credentials=dbt_credentials, job_id=job_id)
-    dbt_job.trigger()  
+    dbt_job.trigger()    
     print(f"Triggered dbt Cloud job with Job ID: {job_id}")
 
 
