@@ -1,4 +1,3 @@
-import time
 from prefect import flow, task
 from prefect_aws.s3 import S3Bucket
 from prefect_dbt.cloud import DbtCloudCredentials, DbtCloudJob
@@ -7,23 +6,22 @@ import boto3
 from httpx import Timeout
 
 # Task 1: Upload data to S3
-@task
+@task(retries=3, retry_delay_seconds=10)
 def upload_to_s3(local_file: str, s3_bucket_block_name: str, s3_file: str):
     """
     Uploads a file to S3 using a Prefect S3Bucket block.
     """
-    time.sleep(2)
     s3_bucket = S3Bucket.load(s3_bucket_block_name)
     s3_bucket.upload_from_path(from_path=local_file, to_path=s3_file)
     print(f"File uploaded successfully to S3 path: {s3_file}")
+    return f"File uploaded successfully to {s3_file}"
 
 # Task 2: Load data from S3 to Snowflake
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_to_snowflake(stage_path: str, snowflake_block_name: str, table_name: str):
     """
     Loads data from S3 into Snowflake using a Prefect SnowflakeConnector block.
     """
-    time.sleep(3)
     snowflake_connector = SnowflakeConnector.load(snowflake_block_name)
 
     # SQL to copy data from S3 to Snowflake
@@ -37,6 +35,7 @@ def load_to_snowflake(stage_path: str, snowflake_block_name: str, table_name: st
         with connection.cursor() as cursor:
             cursor.execute(query)
             print(f"Data loaded successfully into Snowflake table: {table_name}")
+    return f"Data loaded successfully into {table_name}"
 
 
 @task(retries=3, retry_delay_seconds=10)
@@ -44,14 +43,13 @@ def trigger_dbt_cloud_job(dbt_block_name: str, job_id: int):
     """
     Triggers a dbt Cloud job using a Prefect DbtCloudCredentials block.
     """
-    time.sleep(5)
     dbt_credentials = DbtCloudCredentials.load(dbt_block_name)
     print(f"Loaded dbt credentials: {dbt_credentials}")
     #dbt_job = DbtCloudJob(credentials=dbt_credentials, job_id=job_id)
     dbt_job = DbtCloudJob(dbt_cloud_credentials=dbt_credentials, job_id=job_id)
     dbt_job.trigger()    
-    print(f"Triggered dbt Cloud job with Job ID: {job_id}")
-
+    # print(f"Triggered dbt Cloud job with Job ID: {job_id}")
+    return f"Triggered dbt job {job_id}"
 
 
 
@@ -74,22 +72,22 @@ def data_pipeline_flow():
     # s3_path = f"s3://my-prefect-s3-bucket/{s3_file}"
     stage_path = f"@my_s3_stage/{s3_file}"  
     dbt_block_name = "my-dbt-cloud-credentials"  
-    dbt_job_id = 70471823420051  
+    dbt_job_id = 70471823423745  
 
     
     # Step 1: Upload data to S3
-    source_to_s3 = upload_to_s3(local_file, s3_bucket_block_name, s3_file)
+    s3_task = upload_to_s3(local_file, s3_bucket_block_name, s3_file)
 
     # Step 2: Load data from S3 to Snowflake
-    s3_to_snowflake = load_to_snowflake(stage_path, snowflake_block_name, table_name)
+    snowflake_task = load_to_snowflake(stage_path, snowflake_block_name, table_name)
 
     # Step 3: Trigger a dbt Cloud job for transformations
-    dbt_transformation = trigger_dbt_cloud_job(dbt_block_name, dbt_job_id)
+    dbt_task = trigger_dbt_cloud_job(dbt_block_name, dbt_job_id)
     #test purpose
 
-    #perform a synchronous execution (to enable the tasks run in a sequential order)
-    final_flow = source_to_s3 + s3_to_snowflake + dbt_transformation
-    return final_flow
+    # combine results sequentially
+    final_result = s3_task + snowflake_task + dbt_task
+    return final_result
 
 # Run the flow
 if __name__ == "__main__":
