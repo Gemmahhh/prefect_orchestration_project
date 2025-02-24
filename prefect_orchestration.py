@@ -45,6 +45,9 @@ def trigger_dbt_cloud_job(dbt_block_name: str, job_id: int):
     """
     dbt_credentials = DbtCloudCredentials.load(dbt_block_name)
     print(f"Loaded dbt credentials: {dbt_credentials}")
+    print(f"API Key: {dbt_credentials.api_key.get_secret_value()}")
+    print(f"Account ID: {dbt_credentials.account_id}")
+    print(f"Domain: {dbt_credentials.domain}")
     #dbt_job = DbtCloudJob(credentials=dbt_credentials, job_id=job_id)
     dbt_job = DbtCloudJob(dbt_cloud_credentials=dbt_credentials, job_id=job_id)
     dbt_job.trigger()    
@@ -72,7 +75,7 @@ def data_pipeline_flow():
     # s3_path = f"s3://my-prefect-s3-bucket/{s3_file}"
     stage_path = f"@my_s3_stage/{s3_file}"  
     dbt_block_name = "my-dbt-cloud-credentials"  
-    dbt_job_id = 70471823423745  
+    dbt_job_id = 70471823430806  
 
     
     # Step 1: Upload data to S3
@@ -92,3 +95,4 @@ def data_pipeline_flow():
 # Run the flow
 if __name__ == "__main__":
     data_pipeline_flow()
+
