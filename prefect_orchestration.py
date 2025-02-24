@@ -45,9 +45,6 @@ def trigger_dbt_cloud_job(dbt_block_name: str, job_id: int):
     """
     dbt_credentials = DbtCloudCredentials.load(dbt_block_name)
     print(f"Loaded dbt credentials: {dbt_credentials}")
-    print(f"API Key: {dbt_credentials.api_key.get_secret_value()}")
-    print(f"Account ID: {dbt_credentials.account_id}")
-    print(f"Domain: {dbt_credentials.domain}")
     #dbt_job = DbtCloudJob(credentials=dbt_credentials, job_id=job_id)
     dbt_job = DbtCloudJob(dbt_cloud_credentials=dbt_credentials, job_id=job_id)
     dbt_job.trigger()    
