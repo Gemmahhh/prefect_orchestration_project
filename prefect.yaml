@@ -46,3 +46,16 @@ deployments:
     work_queue_name:
     job_variables: {}
   schedules: []
+- name: api-deployment
+  version:
+  tags: []
+  concurrency_limit:
+  description: "Orchestrates the entire pipeline:\n1. Upload data to S3.\n2. Load
+    data from S3 to Snowflake.\n3. Trigger a dbt Cloud job."
+  entrypoint: prefect_orchestration.py:data_pipeline_flow
+  parameters: {}
+  work_pool:
+    name: default
+    work_queue_name:
+    job_variables: {}
+  schedules: []
